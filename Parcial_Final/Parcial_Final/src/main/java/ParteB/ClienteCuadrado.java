@@ -23,7 +23,7 @@ public class ClienteCuadrado {
         
         try {
             socket = new Socket(HOST, PUERTO);
-            System.out.println("Conexión establecida exitosamente!");
+            System.out.println("Conexion establecida exitosamente!");
             
             entrada = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             salida = new PrintWriter(socket.getOutputStream(), true);
@@ -44,7 +44,7 @@ public class ClienteCuadrado {
             try {
                 numero = Integer.parseInt(numeroStr);
             } catch (NumberFormatException e) {
-                System.out.println("Debe ingresar un número entero valido");
+                System.out.println("Debe ingresar un numero entero valido");
                 return;
             }
             
@@ -69,13 +69,13 @@ public class ClienteCuadrado {
             System.out.println("Operación completada");
             
         } catch (UnknownHostException e) {
-            System.err.println("Error: No se pudo encontrar el host " + HOST);
+            System.err.println("No se pudo encontrar el host " + HOST);
             System.err.println("Verifique que el servidor esté ejecutándose");
         } catch (ConnectException e) {
-            System.err.println("Error: No se pudo conectar al servidor en " + HOST + ":" + PUERTO);
-            System.err.println("Verifique que el servidor esté ejecutándose y el puerto esté disponible");
+            System.err.println("No se pudo conectar al servidor en " + HOST + ":" + PUERTO);
+            System.err.println("Verifique que el servidor este ejecutandose y el puerto este disponible");
         } catch (IOException e) {
-            System.err.println("Error de comunicación: " + e.getMessage());
+            System.err.println("Error de comunicacion: " + e.getMessage());
         } finally {
            
             try {

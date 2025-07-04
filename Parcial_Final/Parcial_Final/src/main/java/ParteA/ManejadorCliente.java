@@ -8,86 +8,51 @@ import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-class ManejadorCliente implements Runnable {
+public class ManejadorCliente implements Runnable {
 
-    private Socket clienteSocket;
-    private String direccionCliente;
-    private int puertoCliente;
+    private final Socket socket;
 
-    public ManejadorCliente(Socket clienteSocket) {
-        this.clienteSocket = clienteSocket;
-        this.direccionCliente = clienteSocket.getInetAddress().getHostAddress();
-        this.puertoCliente = clienteSocket.getPort();
+    public ManejadorCliente(Socket socket) {
+        this.socket = socket;
     }
 
     @Override
     public void run() {
-        BufferedReader entrada = null;
-        PrintWriter salida = null;
+        String nombre = null;
 
-        try {
+        try (
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true)
+        ) {
+            nombre = in.readLine();
+            int numero = Integer.parseInt(in.readLine());
 
-            entrada = new BufferedReader(new InputStreamReader(clienteSocket.getInputStream()));
-            salida = new PrintWriter(clienteSocket.getOutputStream(), true);
-
-            System.out.println("Procesando cliente: " + direccionCliente + ":" + puertoCliente);
-
-            String nombre = entrada.readLine();
-            if (nombre == null || nombre.trim().isEmpty()) {
-                salida.println("ERROR: Nombre no válido");
-                return;
-            }
-
-            String numeroStr = entrada.readLine();
-            if (numeroStr == null) {
-                salida.println("ERROR: Número no recibido");
-                return;
-            }
-
-            int numero;
-            try {
-                numero = Integer.parseInt(numeroStr.trim());
-            } catch (NumberFormatException e) {
-                salida.println("ERROR: El número debe ser un entero válido");
-                return;
-            }
+            System.out.println("Cliente " + nombre + " conectado");
 
             int cuadrado = numero * numero;
-
             LocalDateTime ahora = LocalDateTime.now();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-            String fechaHora = ahora.format(formatter);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String fechaHoraFormateada = ahora.format(formatter);
 
-            StringBuilder respuesta = new StringBuilder();
-            respuesta.append("¡Bienvenido, ").append(nombre).append("!\n");
-            respuesta.append("El cuadrado de ").append(numero).append(" es: ").append(cuadrado).append("\n");
-            respuesta.append("Fecha y hora del servidor: ").append(fechaHora);
+            out.println("¡Bienvenido, " + nombre + "!");
+            out.println("El cuadrado de " + numero + " es: " + cuadrado);
+            out.println("Fecha y hora del servidor: " + fechaHoraFormateada);
 
-            salida.println(respuesta.toString());
-
-            System.out.println("Cliente " + direccionCliente + ":" + puertoCliente
-                    + " - Nombre: " + nombre + ", Número: " + numero
-                    + ", Cuadrado: " + cuadrado);
-
-        } catch (IOException e) {
-            System.err.println("Error al procesar cliente " + direccionCliente + ":"
-                    + puertoCliente + " - " + e.getMessage());
+        } catch (IOException | NumberFormatException e) {
+            System.err.println("Error de comunicación con el cliente: " + e.getMessage());
         } finally {
+            if (nombre != null) {
+                System.out.println("Cliente " + nombre + " desconectado");
+            } else {
+                System.out.println("Cliente anónimo desconectado");
+            }
 
             try {
-                if (entrada != null) {
-                    entrada.close();
+                if (socket != null && !socket.isClosed()) {
+                    socket.close();
                 }
-                if (salida != null) {
-                    salida.close();
-                }
-                if (clienteSocket != null && !clienteSocket.isClosed()) {
-                    clienteSocket.close();
-                }
-                System.out.println("Conexión cerrada con cliente: "
-                        + direccionCliente + ":" + puertoCliente + "\n");
             } catch (IOException e) {
-                System.err.println("Error al cerrar recursos: " + e.getMessage());
+                e.printStackTrace();
             }
         }
     }
